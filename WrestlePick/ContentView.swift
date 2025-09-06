@@ -1,46 +1,58 @@
 import SwiftUI
 
 struct ContentView: View {
+    @StateObject private var authService = AuthService.shared
+    @StateObject private var themeManager = ThemeManager()
+    
     var body: some View {
-        NavigationView {
-            VStack {
-                Text("WrestlePick")
-                    .font(.largeTitle)
-                    .fontWeight(.bold)
-                    .padding()
-                
-                Text("Think you can book better than WWE? Prove it.")
-                    .font(.headline)
-                    .foregroundColor(.secondary)
-                    .multilineTextAlignment(.center)
-                    .padding()
-                
-                Spacer()
-                
-                VStack(spacing: 20) {
-                    NavigationLink(destination: NewsView()) {
-                        FeatureCard(title: "News", description: "Stay updated with wrestling news and rumors")
-                    }
-                    
-                    NavigationLink(destination: PredictionsView()) {
-                        FeatureCard(title: "Predictions", description: "Make predictions and track your accuracy")
-                    }
-                    
-                    NavigationLink(destination: CommunityView()) {
-                        FeatureCard(title: "Community", description: "Connect with other wrestling fans")
-                    }
-                    
-                    NavigationLink(destination: AwardsView()) {
-                        FeatureCard(title: "Awards", description: "Create your own wrestling awards")
-                    }
-                }
-                .padding()
-                
-                Spacer()
+        Group {
+            if authService.isAuthenticated {
+                MainTabView()
+            } else {
+                AuthenticationView()
             }
-            .navigationTitle("WrestlePick")
-            .navigationBarTitleDisplayMode(.large)
         }
+        .environmentObject(themeManager)
+        .onAppear {
+            // Check authentication status
+            if authService.currentUser == nil && !authService.isAuthenticated {
+                // User is not authenticated, show auth view
+            }
+        }
+    }
+}
+
+// MARK: - Main Tab View
+struct MainTabView: View {
+    @StateObject private var authService = AuthService.shared
+    
+    var body: some View {
+        TabView {
+            NewsView()
+                .tabItem {
+                    Image(systemName: "newspaper")
+                    Text("News")
+                }
+            
+            PredictionsView()
+                .tabItem {
+                    Image(systemName: "crystal.ball")
+                    Text("Predictions")
+                }
+            
+            AwardsView()
+                .tabItem {
+                    Image(systemName: "trophy")
+                    Text("Awards")
+                }
+            
+            ProfileView()
+                .tabItem {
+                    Image(systemName: "person")
+                    Text("Profile")
+                }
+        }
+        .accentColor(.wweBlue)
     }
 }
 

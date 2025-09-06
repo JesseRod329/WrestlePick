@@ -1,0 +1,266 @@
+# SwiftLint Configuration for WrestlePick
+# Enforces SwiftUI best practices and iOS development standards
+
+disabled_rules:
+  - trailing_whitespace
+  - line_length
+
+opt_in_rules:
+  - array_init
+  - attributes
+  - closure_body_length
+  - closure_end_indentation
+  - closure_spacing
+  - collection_alignment
+  - contains_over_filter_count
+  - contains_over_filter_is_empty
+  - contains_over_first_not_nil
+  - contains_over_range_nil_comparison
+  - discouraged_object_literal
+  - empty_collection_literal
+  - empty_count
+  - empty_string
+  - enum_case_associated_values_count
+  - explicit_init
+  - extension_access_modifier
+  - fallthrough
+  - fatal_error_message
+  - file_header
+  - first_where
+  - force_unwrapping
+  - function_default_parameter_at_end
+  - identical_operands
+  - implicit_return
+  - joined_default_parameter
+  - last_where
+  - legacy_random
+  - literal_expression_end_indentation
+  - lower_acl_than_parent
+  - modifier_order
+  - nimble_operator
+  - nslocalizedstring_key
+  - number_separator
+  - object_literal
+  - operator_usage_whitespace
+  - overridden_super_call
+  - override_in_extension
+  - pattern_matching_keywords
+  - prefer_self_type_over_type_of_self
+  - prefer_zero_over_explicit_init
+  - prefixed_toplevel_constant
+  - prohibited_interface_builder
+  - prohibited_super_call
+  - quick_discouraged_call
+  - quick_discouraged_focused_test
+  - quick_discouraged_pending_test
+  - reduce_into
+  - redundant_nil_coalescing
+  - redundant_type_annotation
+  - required_enum_case
+  - single_test_class
+  - sorted_first_last
+  - static_operator
+  - strong_iboutlet
+  - switch_case_on_newline
+  - toggle_bool
+  - unavailable_function
+  - unneeded_parentheses_in_closure_argument
+  - untyped_error_in_catch
+  - vertical_parameter_alignment_on_call
+  - vertical_whitespace_closing_braces
+  - vertical_whitespace_opening_braces
+  - xct_specific_matcher
+  - yoda_condition
+
+included:
+  - WrestlePick
+  - WrestlePickTests
+  - WrestlePickUITests
+
+excluded:
+  - WrestlePick/Preview Content
+  - WrestlePick/Assets.xcassets
+  - WrestlePick/GoogleService-Info.plist
+
+# Custom rules for WrestlePick
+custom_rules:
+  # SwiftUI specific rules
+  swiftui_view_modifier_order:
+    name: "SwiftUI View Modifier Order"
+    regex: '\.(padding|background|foregroundColor|font|cornerRadius|shadow|overlay|clipShape)'
+    message: "SwiftUI modifiers should be ordered: layout, appearance, behavior"
+    severity: warning
+
+  # Accessibility rules
+  missing_accessibility_label:
+    name: "Missing Accessibility Label"
+    regex: 'Image\([^)]+\)(?!.*\.accessibilityLabel)'
+    message: "Images should have accessibility labels for VoiceOver support"
+    severity: warning
+
+  # Error handling rules
+  force_unwrap_guard:
+    name: "Force Unwrap Guard"
+    regex: '!\s*[a-zA-Z_][a-zA-Z0-9_]*'
+    message: "Avoid force unwrapping. Use guard statements or optional binding"
+    severity: error
+
+  # Firebase security rules
+  hardcoded_firebase_path:
+    name: "Hardcoded Firebase Path"
+    regex: 'collection\(["\']\w+["\']\)'
+    message: "Use FirestoreCollections constants instead of hardcoded collection names"
+    severity: warning
+
+# Rule configurations
+line_length:
+  warning: 120
+  error: 150
+  ignores_urls: true
+  ignores_function_declarations: true
+  ignores_comments: true
+
+file_length:
+  warning: 300
+  error: 500
+
+function_body_length:
+  warning: 50
+  error: 100
+
+type_body_length:
+  warning: 200
+  error: 400
+
+cyclomatic_complexity:
+  warning: 10
+  error: 20
+
+nesting:
+  type_level:
+    warning: 3
+    error: 5
+  statement_level:
+    warning: 5
+    error: 10
+
+identifier_name:
+  min_length:
+    warning: 2
+    error: 1
+  max_length:
+    warning: 40
+    error: 60
+  excluded:
+    - id
+    - url
+    - api
+    - ui
+    - db
+
+type_name:
+  min_length:
+    warning: 3
+    error: 2
+  max_length:
+    warning: 40
+    error: 60
+
+# SwiftUI specific configurations
+closure_body_length:
+  warning: 30
+  error: 50
+
+closure_parameter_position:
+  only_enforce_after_closure: true
+
+# Accessibility configurations
+accessibility_label_for_image:
+  severity: warning
+
+# Performance configurations
+large_tuple:
+  warning: 3
+  error: 4
+
+# Security configurations
+force_unwrapping:
+  severity: error
+
+implicitly_unwrapped_optional:
+  severity: error
+
+# Documentation requirements
+missing_docs:
+  severity: warning
+  excluded:
+    - ".*Tests?.*"
+    - ".*Preview.*"
+    - ".*Mock.*"
+
+# Import organization
+import_order:
+  severity: warning
+  groups:
+    - "Foundation"
+    - "SwiftUI"
+    - "Combine"
+    - "Firebase"
+    - "ThirdParty"
+    - "Local"
+
+# Naming conventions
+naming:
+  min_length:
+    warning: 2
+    error: 1
+  max_length:
+    warning: 40
+    error: 60
+
+# Code organization
+organization:
+  severity: warning
+  excluded:
+    - ".*Tests?.*"
+    - ".*Preview.*"
+
+# Performance optimizations
+unused_closure_parameter:
+  severity: warning
+
+# Memory management
+weak_delegate:
+  severity: warning
+
+# Error handling
+try:
+  severity: error
+
+# SwiftUI performance
+view_builder:
+  severity: warning
+
+# Accessibility
+accessibility_identifier:
+  severity: warning
+
+# Security
+hardcoded_strings:
+  severity: warning
+  excluded:
+    - ".*Tests?.*"
+    - ".*Preview.*"
+    - ".*Mock.*"
+
+# Testing
+test_case_accessibility:
+  severity: warning
+
+# Documentation
+documentation:
+  severity: warning
+  excluded:
+    - ".*Tests?.*"
+    - ".*Preview.*"
+    - ".*Mock.*"

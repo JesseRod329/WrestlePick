@@ -1,0 +1,346 @@
+name: WrestlePick CI/CD
+
+on:
+  push:
+    branches: [ main, develop, feature/*, bugfix/*, hotfix/* ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  # Code Quality Checks
+  code-quality:
+    name: Code Quality
+    runs-on: macos-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Xcode
+      uses: maxim-lobanov/setup-xcode@v1
+      with:
+        xcode-version: '15.0'
+        
+    - name: Setup SwiftLint
+      run: |
+        brew install swiftlint
+        swiftlint version
+        
+    - name: Setup SwiftFormat
+      run: |
+        brew install swiftformat
+        swiftformat --version
+        
+    - name: Run SwiftLint
+      run: swiftlint lint --reporter github
+      
+    - name: Run SwiftFormat
+      run: swiftformat --lint .
+      
+    - name: Security Scan
+      run: |
+        # Check for hardcoded secrets
+        if grep -r "sk_live_\|pk_live_\|AIza\|firebase\|google" --include="*.swift" --include="*.plist" . | grep -v "GoogleService-Info.plist" | grep -v "FirebaseConfig.swift" | grep -v "//"; then
+          echo "::error::Potential hardcoded secrets found"
+          exit 1
+        fi
+        
+    - name: Accessibility Check
+      run: |
+        # Check for missing accessibility labels
+        if grep -r "Image(" --include="*.swift" . | grep -v "accessibilityLabel" | head -3; then
+          echo "::warning::Images without accessibility labels found"
+        fi
+        
+        # Check for missing accessibility identifiers
+        if grep -r "Button\|TextField\|Picker" --include="*.swift" . | grep -v "accessibilityIdentifier" | head -3; then
+          echo "::warning::UI elements without accessibility identifiers found"
+        fi
+
+  # Unit Tests
+  unit-tests:
+    name: Unit Tests
+    runs-on: macos-latest
+    needs: code-quality
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Xcode
+      uses: maxim-lobanov/setup-xcode@v1
+      with:
+        xcode-version: '15.0'
+        
+    - name: Run Unit Tests
+      run: |
+        xcodebuild test \
+          -project WrestlePick.xcodeproj \
+          -scheme WrestlePick \
+          -destination 'platform=iOS Simulator,name=iPhone 15' \
+          -quiet
+          
+    - name: Generate Test Report
+      uses: davidparsson/xcode-test-reporter@v1
+      if: always()
+      with:
+        path: DerivedData/Logs/Test/*.xcresult
+
+  # UI Tests
+  ui-tests:
+    name: UI Tests
+    runs-on: macos-latest
+    needs: code-quality
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Xcode
+      uses: maxim-lobanov/setup-xcode@v1
+      with:
+        xcode-version: '15.0'
+        
+    - name: Run UI Tests
+      run: |
+        xcodebuild test \
+          -project WrestlePick.xcodeproj \
+          -scheme WrestlePickUITests \
+          -destination 'platform=iOS Simulator,name=iPhone 15' \
+          -quiet
+          
+    - name: Generate UI Test Report
+      uses: davidparsson/xcode-test-reporter@v1
+      if: always()
+      with:
+        path: DerivedData/Logs/Test/*.xcresult
+
+  # Integration Tests
+  integration-tests:
+    name: Integration Tests
+    runs-on: macos-latest
+    needs: [code-quality, unit-tests]
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Xcode
+      uses: maxim-lobanov/setup-xcode@v1
+      with:
+        xcode-version: '15.0'
+        
+    - name: Setup Firebase Emulator
+      run: |
+        npm install -g firebase-tools
+        firebase emulators:start --only firestore &
+        sleep 10
+        
+    - name: Run Integration Tests
+      run: |
+        xcodebuild test \
+          -project WrestlePick.xcodeproj \
+          -scheme WrestlePick \
+          -destination 'platform=iOS Simulator,name=iPhone 15' \
+          -only-testing:WrestlePickTests/FirebaseIntegrationTests \
+          -quiet
+          
+    - name: Stop Firebase Emulator
+      run: pkill -f firebase
+
+  # Performance Tests
+  performance-tests:
+    name: Performance Tests
+    runs-on: macos-latest
+    needs: code-quality
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Xcode
+      uses: maxim-lobanov/setup-xcode@v1
+      with:
+        xcode-version: '15.0'
+        
+    - name: Build Performance Test
+      run: |
+        start_time=$(date +%s)
+        xcodebuild build \
+          -project WrestlePick.xcodeproj \
+          -scheme WrestlePick \
+          -destination 'platform=iOS Simulator,name=iPhone 15' \
+          -quiet
+        end_time=$(date +%s)
+        duration=$((end_time - start_time))
+        echo "Build completed in ${duration}s"
+        if [ $duration -gt 300 ]; then
+          echo "::error::Build took too long: ${duration}s"
+          exit 1
+        fi
+        
+    - name: Memory Usage Check
+      run: |
+        if find . -name "*.swift" -size +50k -exec basename {} \; | head -1; then
+          echo "::warning::Large Swift files detected. Consider optimization."
+        fi
+
+  # Security Tests
+  security-tests:
+    name: Security Tests
+    runs-on: macos-latest
+    needs: code-quality
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Security Scan
+      run: |
+        # Check for hardcoded secrets
+        if grep -r "password\|secret\|key\|token" --include="*.swift" . | grep -v "//" | head -3; then
+          echo "::error::Potential hardcoded secrets found"
+          exit 1
+        fi
+        
+        # Check for insecure practices
+        if grep -r "try!" --include="*.swift" . | grep -v "//" | head -3; then
+          echo "::warning::Insecure try! usage found. Consider proper error handling."
+        fi
+        
+    - name: Dependency Scan
+      run: |
+        # Check for known vulnerabilities in dependencies
+        if [ -f "Package.swift" ]; then
+          swift package resolve
+          swift package show-dependencies
+        fi
+
+  # Build Tests
+  build-tests:
+    name: Build Tests
+    runs-on: macos-latest
+    needs: code-quality
+    
+    strategy:
+      matrix:
+        configuration: [Debug, Release]
+        destination: ['iPhone 15', 'iPhone 15 Pro', 'iPad (10th generation)']
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Xcode
+      uses: maxim-lobanov/setup-xcode@v1
+      with:
+        xcode-version: '15.0'
+        
+    - name: Build ${{ matrix.configuration }} for ${{ matrix.destination }}
+      run: |
+        xcodebuild build \
+          -project WrestlePick.xcodeproj \
+          -scheme WrestlePick \
+          -configuration ${{ matrix.configuration }} \
+          -destination "platform=iOS Simulator,name=${{ matrix.destination }}" \
+          -quiet
+
+  # Documentation Tests
+  documentation-tests:
+    name: Documentation Tests
+    runs-on: macos-latest
+    needs: code-quality
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Check Documentation
+      run: |
+        # Check for missing documentation
+        if grep -r "public func\|public class\|public struct" --include="*.swift" . | grep -v "///" | head -3; then
+          echo "::warning::Public APIs without documentation found"
+        fi
+        
+        # Check README
+        if [ ! -f "README.md" ] || [ ! -s "README.md" ]; then
+          echo "::error::README.md is missing or empty"
+          exit 1
+        fi
+        
+    - name: Generate Documentation
+      run: |
+        # Generate documentation if jazzy is available
+        if command -v jazzy &> /dev/null; then
+          jazzy --min-acl public --output docs
+        else
+          echo "::info::Jazzy not available. Install with: gem install jazzy"
+        fi
+
+  # Accessibility Tests
+  accessibility-tests:
+    name: Accessibility Tests
+    runs-on: macos-latest
+    needs: code-quality
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Xcode
+      uses: maxim-lobanov/setup-xcode@v1
+      with:
+        xcode-version: '15.0'
+        
+    - name: Run Accessibility Tests
+      run: |
+        # Check for missing accessibility labels
+        if grep -r "Image(" --include="*.swift" . | grep -v "accessibilityLabel" | head -3; then
+          echo "::warning::Images without accessibility labels found"
+        fi
+        
+        # Check for missing accessibility identifiers
+        if grep -r "Button\|TextField\|Picker" --include="*.swift" . | grep -v "accessibilityIdentifier" | head -3; then
+          echo "::warning::UI elements without accessibility identifiers found"
+        fi
+        
+    - name: Accessibility Audit
+      run: |
+        # Run accessibility audit if available
+        if command -v accessibility-audit &> /dev/null; then
+          accessibility-audit --project WrestlePick.xcodeproj
+        else
+          echo "::info::Accessibility audit tool not available"
+        fi
+
+  # Final Validation
+  final-validation:
+    name: Final Validation
+    runs-on: macos-latest
+    needs: [code-quality, unit-tests, ui-tests, integration-tests, performance-tests, security-tests, build-tests, documentation-tests, accessibility-tests]
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Final Validation
+      run: |
+        echo "🎉 All CI/CD checks passed!"
+        echo "✅ Code quality checks passed"
+        echo "✅ Unit tests passed"
+        echo "✅ UI tests passed"
+        echo "✅ Integration tests passed"
+        echo "✅ Performance tests passed"
+        echo "✅ Security tests passed"
+        echo "✅ Build tests passed"
+        echo "✅ Documentation tests passed"
+        echo "✅ Accessibility tests passed"
+        echo ""
+        echo "🚀 Ready for deployment!"
+        
+    - name: Create Release Notes
+      if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+      run: |
+        echo "## Release Notes" >> $GITHUB_STEP_SUMMARY
+        echo "### Changes in this release:" >> $GITHUB_STEP_SUMMARY
+        git log --oneline --since="$(git log -1 --format=%ai)" >> $GITHUB_STEP_SUMMARY

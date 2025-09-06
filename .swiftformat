@@ -1,0 +1,198 @@
+# SwiftFormat Configuration for WrestlePick
+# Enforces consistent code formatting and SwiftUI best practices
+
+# Version
+--swiftversion 5.9
+
+# Formatting options
+--indent 4
+--tabwidth 4
+--maxwidth 120
+--wraparguments before-first
+--wrapparameters before-first
+--wrapcollections before-first
+--closingparen balanced
+--indentcase false
+--indentstrings false
+--trimwhitespace always
+--commas always
+--semicolons never
+--operatorfunc spaced
+--ranges spaced
+--decimalgrouping 3,6
+--binarygrouping 4,8
+--octalgrouping 4,8
+--hexgrouping 4,8
+--fractiongrouping enabled
+--exponentgrouping enabled
+--hexliteralcase uppercase
+--exponentcase lowercase
+--importgrouping testable-bottom
+--stripunusedargs always
+--self insert
+--selfrequired ["UIViewController", "UIView", "UIResponder", "NSObject"]
+--extensionacl on-extension
+--patternlet hoist
+--nospaceoperators ["...", "..<"]
+--ranges spaced
+--linebreaks lf
+--trimwhitespace always
+--insertlines true
+--removelines true
+--allman false
+--wraparguments before-first
+--wrapparameters before-first
+--wrapcollections before-first
+--closingparen balanced
+--indentcase false
+--indentstrings false
+--trimwhitespace always
+--commas always
+--semicolons never
+--operatorfunc spaced
+--ranges spaced
+--decimalgrouping 3,6
+--binarygrouping 4,8
+--octalgrouping 4,8
+--hexgrouping 4,8
+--fractiongrouping enabled
+--exponentgrouping enabled
+--hexliteralcase uppercase
+--exponentcase lowercase
+--importgrouping testable-bottom
+--stripunusedargs always
+--self insert
+--selfrequired ["UIViewController", "UIView", "UIResponder", "NSObject"]
+--extensionacl on-extension
+--patternlet hoist
+--nospaceoperators ["...", "..<"]
+--ranges spaced
+--linebreaks lf
+--trimwhitespace always
+--insertlines true
+--removelines true
+--allman false
+
+# SwiftUI specific formatting
+--swiftversion 5.9
+--indent 4
+--tabwidth 4
+--maxwidth 120
+--wraparguments before-first
+--wrapparameters before-first
+--wrapcollections before-first
+--closingparen balanced
+--indentcase false
+--indentstrings false
+--trimwhitespace always
+--commas always
+--semicolons never
+--operatorfunc spaced
+--ranges spaced
+--decimalgrouping 3,6
+--binarygrouping 4,8
+--octalgrouping 4,8
+--hexgrouping 4,8
+--fractiongrouping enabled
+--exponentgrouping enabled
+--hexliteralcase uppercase
+--exponentcase lowercase
+--importgrouping testable-bottom
+--stripunusedargs always
+--self insert
+--selfrequired ["UIViewController", "UIView", "UIResponder", "NSObject", "View"]
+--extensionacl on-extension
+--patternlet hoist
+--nospaceoperators ["...", "..<"]
+--ranges spaced
+--linebreaks lf
+--trimwhitespace always
+--insertlines true
+--removelines true
+--allman false
+
+# File organization
+--fileheader "//\n// {file}\n// WrestlePick\n//\n// Created by {author} on {date}.\n// Copyright © {year} WrestlePick. All rights reserved.\n//"
+
+# Exclude patterns
+--exclude "WrestlePick/Preview Content"
+--exclude "WrestlePick/Assets.xcassets"
+--exclude "WrestlePick/GoogleService-Info.plist"
+--exclude "WrestlePickTests"
+--exclude "WrestlePickUITests"
+
+# SwiftUI specific rules
+--swiftversion 5.9
+--indent 4
+--tabwidth 4
+--maxwidth 120
+--wraparguments before-first
+--wrapparameters before-first
+--wrapcollections before-first
+--closingparen balanced
+--indentcase false
+--indentstrings false
+--trimwhitespace always
+--commas always
+--semicolons never
+--operatorfunc spaced
+--ranges spaced
+--decimalgrouping 3,6
+--binarygrouping 4,8
+--octalgrouping 4,8
+--hexgrouping 4,8
+--fractiongrouping enabled
+--exponentgrouping enabled
+--hexliteralcase uppercase
+--exponentcase lowercase
+--importgrouping testable-bottom
+--stripunusedargs always
+--self insert
+--selfrequired ["UIViewController", "UIView", "UIResponder", "NSObject", "View"]
+--extensionacl on-extension
+--patternlet hoist
+--nospaceoperators ["...", "..<"]
+--ranges spaced
+--linebreaks lf
+--trimwhitespace always
+--insertlines true
+--removelines true
+--allman false
+
+# Performance optimizations
+--swiftversion 5.9
+--indent 4
+--tabwidth 4
+--maxwidth 120
+--wraparguments before-first
+--wrapparameters before-first
+--wrapcollections before-first
+--closingparen balanced
+--indentcase false
+--indentstrings false
+--trimwhitespace always
+--commas always
+--semicolons never
+--operatorfunc spaced
+--ranges spaced
+--decimalgrouping 3,6
+--binarygrouping 4,8
+--octalgrouping 4,8
+--hexgrouping 4,8
+--fractiongrouping enabled
+--exponentgrouping enabled
+--hexliteralcase uppercase
+--exponentcase lowercase
+--importgrouping testable-bottom
+--stripunusedargs always
+--self insert
+--selfrequired ["UIViewController", "UIView", "UIResponder", "NSObject", "View"]
+--extensionacl on-extension
+--patternlet hoist
+--nospaceoperators ["...", "..<"]
+--ranges spaced
+--linebreaks lf
+--trimwhitespace always
+--insertlines true
+--removelines true
+--allman false

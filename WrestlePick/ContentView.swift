@@ -65,13 +65,7 @@ struct FeatureCard: View {
     }
 }
 
-// Placeholder views for navigation
-struct NewsView: View {
-    var body: some View {
-        Text("News View - Coming Soon")
-            .navigationTitle("News")
-    }
-}
+// NewsView is now implemented in its own file
 
 struct PredictionsView: View {
     var body: some View {

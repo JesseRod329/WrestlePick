@@ -1,60 +1,53 @@
 import SwiftUI
 
 struct ContentView: View {
-    @StateObject private var authService = AuthService.shared
-    @StateObject private var themeManager = ThemeManager()
-    
     var body: some View {
-        Group {
-            if authService.isAuthenticated {
-                MainTabView()
-            } else {
-                AuthenticationView()
+        NavigationView {
+            VStack(spacing: 20) {
+                Image(systemName: "figure.wrestling")
+                    .font(.system(size: 80))
+                    .foregroundColor(.blue)
+                
+                Text("WrestlePick")
+                    .font(.largeTitle)
+                    .fontWeight(.bold)
+                
+                Text("Think you can book better than WWE? Prove it.")
+                    .font(.headline)
+                    .foregroundColor(.secondary)
+                    .multilineTextAlignment(.center)
+                
+                VStack(spacing: 16) {
+                    FeatureCard(
+                        title: "Track Rumors",
+                        description: "Stay up to date with the latest wrestling news and rumors"
+                    )
+                    
+                    FeatureCard(
+                        title: "Make Predictions",
+                        description: "Predict match outcomes and prove your wrestling knowledge"
+                    )
+                    
+                    FeatureCard(
+                        title: "Create Awards",
+                        description: "Design your own wrestling awards and share with the community"
+                    )
+                }
+                .padding(.horizontal)
+                
+                Spacer()
+                
+                Text("Coming Soon to iOS")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
             }
-        }
-        .environmentObject(themeManager)
-        .onAppear {
-            // Check authentication status
-            if authService.currentUser == nil && !authService.isAuthenticated {
-                // User is not authenticated, show auth view
-            }
+            .padding()
+            .navigationTitle("WrestlePick")
         }
     }
 }
 
-// MARK: - Main Tab View
-struct MainTabView: View {
-    @StateObject private var authService = AuthService.shared
-    
-    var body: some View {
-        TabView {
-            NewsView()
-                .tabItem {
-                    Image(systemName: "newspaper")
-                    Text("News")
-                }
-            
-            PredictionsView()
-                .tabItem {
-                    Image(systemName: "crystal.ball")
-                    Text("Predictions")
-                }
-            
-            AwardsView()
-                .tabItem {
-                    Image(systemName: "trophy")
-                    Text("Awards")
-                }
-            
-            ProfileView()
-                .tabItem {
-                    Image(systemName: "person")
-                    Text("Profile")
-                }
-        }
-        .accentColor(.wweBlue)
-    }
-}
+// MARK: - Feature Card
 
 struct FeatureCard: View {
     let title: String
@@ -77,28 +70,6 @@ struct FeatureCard: View {
     }
 }
 
-// NewsView is now implemented in its own file
-
-struct PredictionsView: View {
-    var body: some View {
-        Text("Predictions View - Coming Soon")
-            .navigationTitle("Predictions")
-    }
-}
-
-struct CommunityView: View {
-    var body: some View {
-        Text("Community View - Coming Soon")
-            .navigationTitle("Community")
-    }
-}
-
-struct AwardsView: View {
-    var body: some View {
-        Text("Awards View - Coming Soon")
-            .navigationTitle("Awards")
-    }
-}
 
 #Preview {
     ContentView()

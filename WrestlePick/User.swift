@@ -203,3 +203,12 @@ enum NewsCategory: String, CaseIterable, Codable {
     case backstage = "Backstage"
     case business = "Business"
 }
+
+// MARK: - Sample Data
+extension User {
+    static let sample = User(
+        username: "WrestleFan2024",
+        email: "wrestlefan@example.com",
+        displayName: "WrestleFan2024"
+    )
+}

@@ -3,25 +3,25 @@ import SwiftUI
 struct ContentView: View {
     var body: some View {
         TabView {
-            NewsView()
+            SimpleNewsView()
                 .tabItem {
                     Image(systemName: "newspaper")
                     Text("News")
                 }
             
-            PredictionsView()
+            Text("Predictions Tab")
                 .tabItem {
                     Image(systemName: "crystal.ball")
                     Text("Predictions")
                 }
             
-            AwardsView()
+            Text("Awards Tab")
                 .tabItem {
                     Image(systemName: "trophy")
                     Text("Awards")
                 }
             
-            ProfileView()
+            Text("Profile Tab")
                 .tabItem {
                     Image(systemName: "person.circle")
                     Text("Profile")

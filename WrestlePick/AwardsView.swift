@@ -102,6 +102,21 @@ struct AwardsView: View {
                 creator: "WrestlePick User",
                 timestamp: Date().addingTimeInterval(-86400),
                 isVotingOpen: true
+            ),
+            WrestlingAward(
+                id: "3",
+                title: "Best Promo of 2024",
+                description: "The most memorable promo or segment",
+                category: .segment,
+                nominees: [
+                    "Cody Rhodes 'Finish the Story'",
+                    "MJF's Pipe Bomb",
+                    "Roman Reigns Tribal Chief Speech"
+                ],
+                winner: "Cody Rhodes 'Finish the Story'",
+                creator: "WrestlePick User",
+                timestamp: Date().addingTimeInterval(-172800),
+                isVotingOpen: false
             )
         ]
     }
@@ -161,6 +176,7 @@ struct EmptyAwardsView: View {
         .background(Color(.systemGroupedBackground))
     }
 }
+
 
 struct AwardCardView: View {
     let award: WrestlingAward
@@ -324,3 +340,4 @@ struct CreateAwardView: View {
 #Preview {
     AwardsView()
 }
+

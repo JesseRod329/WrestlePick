@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct ProfileView: View {
-    @State private var user = UserProfile.sample
+    @State private var user = User.sample
     @State private var showingEditProfile = false
     
     var body: some View {
@@ -25,7 +25,7 @@ struct ProfileView: View {
                                 .font(.title2)
                                 .fontWeight(.bold)
                             
-                            Text(user.bio)
+                            Text(user.displayName)
                                 .font(.subheadline)
                                 .foregroundColor(.secondary)
                                 .multilineTextAlignment(.center)
@@ -54,25 +54,25 @@ struct ProfileView: View {
                         ], spacing: 16) {
                             StatCard(
                                 title: "Predictions Made",
-                                value: "\(user.totalPredictions)",
+                                value: "\(user.predictionStats.totalPredictions)",
                                 icon: "crystal.ball"
                             )
                             
                             StatCard(
                                 title: "Accuracy Rate",
-                                value: "\(Int(user.accuracyRate * 100))%",
+                                value: "\(Int(user.predictionStats.accuracy * 100))%",
                                 icon: "target"
                             )
                             
                             StatCard(
-                                title: "Awards Created",
-                                value: "\(user.awardsCreated)",
+                                title: "Points",
+                                value: "\(user.predictionStats.points)",
                                 icon: "trophy"
                             )
                             
                             StatCard(
                                 title: "Streak",
-                                value: "\(user.currentStreak) days",
+                                value: "\(user.predictionStats.currentStreak) days",
                                 icon: "flame"
                             )
                         }
@@ -86,9 +86,31 @@ struct ProfileView: View {
                             .padding(.horizontal)
                         
                         VStack(spacing: 12) {
-                            ForEach(user.recentActivity) { activity in
-                                ActivityRow(activity: activity)
-                            }
+                            // Mock recent activity for now
+                            ActivityRow(
+                                activity: Activity(
+                                    id: "1",
+                                    type: .prediction,
+                                    title: "Made prediction for Roman vs Cody",
+                                    timestamp: Date().addingTimeInterval(-3600)
+                                )
+                            )
+                            ActivityRow(
+                                activity: Activity(
+                                    id: "2",
+                                    type: .award,
+                                    title: "Created 'Match of the Year' award",
+                                    timestamp: Date().addingTimeInterval(-7200)
+                                )
+                            )
+                            ActivityRow(
+                                activity: Activity(
+                                    id: "3",
+                                    type: .news,
+                                    title: "Read breaking news about CM Punk",
+                                    timestamp: Date().addingTimeInterval(-10800)
+                                )
+                            )
                         }
                         .padding(.horizontal)
                     }
@@ -103,48 +125,7 @@ struct ProfileView: View {
     }
 }
 
-// MARK: - Models
-
-struct UserProfile {
-    let id: String
-    var username: String
-    var bio: String
-    let totalPredictions: Int
-    let accuracyRate: Double
-    let awardsCreated: Int
-    let currentStreak: Int
-    let recentActivity: [Activity]
-    
-    static let sample = UserProfile(
-        id: "1",
-        username: "WrestleFan2024",
-        bio: "Passionate wrestling fan who loves making predictions and creating awards!",
-        totalPredictions: 47,
-        accuracyRate: 0.72,
-        awardsCreated: 8,
-        currentStreak: 12,
-        recentActivity: [
-            Activity(
-                id: "1",
-                type: .prediction,
-                title: "Made prediction for Roman vs Cody",
-                timestamp: Date().addingTimeInterval(-3600)
-            ),
-            Activity(
-                id: "2",
-                type: .award,
-                title: "Created 'Match of the Year' award",
-                timestamp: Date().addingTimeInterval(-7200)
-            ),
-            Activity(
-                id: "3",
-                type: .news,
-                title: "Read breaking news about CM Punk",
-                timestamp: Date().addingTimeInterval(-10800)
-            )
-        ]
-    )
-}
+// MARK: - Supporting Models
 
 struct Activity: Identifiable {
     let id: String
@@ -162,33 +143,6 @@ enum ActivityType {
 
 // MARK: - Supporting Views
 
-struct StatCard: View {
-    let title: String
-    let value: String
-    let icon: String
-    
-    var body: some View {
-        VStack(spacing: 8) {
-            Image(systemName: icon)
-                .font(.title2)
-                .foregroundColor(.accentColor)
-            
-            Text(value)
-                .font(.title2)
-                .fontWeight(.bold)
-            
-            Text(title)
-                .font(.caption)
-                .foregroundColor(.secondary)
-                .multilineTextAlignment(.center)
-        }
-        .frame(maxWidth: .infinity)
-        .padding()
-        .background(Color(.systemBackground))
-        .cornerRadius(12)
-        .shadow(color: .black.opacity(0.05), radius: 2, x: 0, y: 1)
-    }
-}
 
 struct ActivityRow: View {
     let activity: Activity
@@ -234,15 +188,15 @@ struct ActivityRow: View {
 
 struct EditProfileView: View {
     @Environment(\.dismiss) private var dismiss
-    @Binding var user: UserProfile
+    @Binding var user: User
     
     @State private var username: String
-    @State private var bio: String
+    @State private var displayName: String
     
-    init(user: Binding<UserProfile>) {
+    init(user: Binding<User>) {
         self._user = user
         self._username = State(initialValue: user.wrappedValue.username)
-        self._bio = State(initialValue: user.wrappedValue.bio)
+        self._displayName = State(initialValue: user.wrappedValue.displayName)
     }
     
     var body: some View {
@@ -250,8 +204,7 @@ struct EditProfileView: View {
             Form {
                 Section("Profile Information") {
                     TextField("Username", text: $username)
-                    TextField("Bio", text: $bio, axis: .vertical)
-                        .lineLimit(3...6)
+                    TextField("Display Name", text: $displayName)
                 }
             }
             .navigationTitle("Edit Profile")
@@ -265,19 +218,16 @@ struct EditProfileView: View {
                 
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button("Save") {
-                        user = UserProfile(
-                            id: user.id,
+                        // Update user with new values
+                        user = User(
                             username: username,
-                            bio: bio,
-                            totalPredictions: user.totalPredictions,
-                            accuracyRate: user.accuracyRate,
-                            awardsCreated: user.awardsCreated,
-                            currentStreak: user.currentStreak,
-                            recentActivity: user.recentActivity
+                            email: user.email,
+                            displayName: displayName,
+                            profileImageURL: user.profileImageURL
                         )
                         dismiss()
                     }
-                    .disabled(username.isEmpty)
+                    .disabled(username.isEmpty || displayName.isEmpty)
                 }
             }
         }

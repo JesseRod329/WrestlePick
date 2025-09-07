@@ -2,7 +2,7 @@ import SwiftUI
 
 struct PredictionsView: View {
     @State private var predictions: [Prediction] = []
-    @State private var selectedEvent: WrestlingEvent?
+    @State private var selectedEvent: Event?
     @State private var showingNewPrediction = false
     
     var body: some View {
@@ -68,66 +68,55 @@ struct PredictionsView: View {
         predictions = [
             Prediction(
                 id: "1",
+                userId: "user1",
                 eventId: "wrestlemania-40",
                 matchTitle: "Roman Reigns vs Cody Rhodes",
                 prediction: "Cody Rhodes",
-                confidence: 8,
+                confidenceLevel: .excellent,
                 reasoning: "The story has been building for years. It's time for Cody to finish the story.",
-                timestamp: Date(),
-                isLocked: false
+                status: .submitted,
+                predictionType: .ppvMatch,
+                deadline: Date().addingTimeInterval(86400 * 7),
+                createdAt: Date(),
+                updatedAt: Date()
             ),
             Prediction(
                 id: "2",
+                userId: "user1",
                 eventId: "wrestlemania-40",
                 matchTitle: "Seth Rollins vs Drew McIntyre",
                 prediction: "Seth Rollins",
-                confidence: 6,
+                confidenceLevel: .good,
                 reasoning: "Seth has been on fire lately, but Drew is hungry for revenge.",
-                timestamp: Date().addingTimeInterval(-3600),
-                isLocked: true
+                status: .locked,
+                predictionType: .ppvMatch,
+                deadline: Date().addingTimeInterval(86400 * 7),
+                createdAt: Date().addingTimeInterval(-3600),
+                updatedAt: Date().addingTimeInterval(-3600)
             )
         ]
     }
     
-    private var events: [WrestlingEvent] {
+    private var events: [Event] {
         [
-            WrestlingEvent(
-                id: "wrestlemania-40",
+            Event(
                 name: "WrestleMania 40",
-                date: Date().addingTimeInterval(86400 * 30),
+                description: "The Grandest Stage of Them All",
+                type: .ppv,
                 promotion: "WWE",
-                venue: "Lincoln Financial Field"
+                venue: Venue(name: "Lincoln Financial Field", city: "Philadelphia", country: "USA"),
+                date: Date().addingTimeInterval(86400 * 30)
             ),
-            WrestlingEvent(
-                id: "aew-double-or-nothing",
+            Event(
                 name: "Double or Nothing",
-                date: Date().addingTimeInterval(86400 * 45),
+                description: "AEW's annual PPV event",
+                type: .ppv,
                 promotion: "AEW",
-                venue: "T-Mobile Arena"
+                venue: Venue(name: "T-Mobile Arena", city: "Las Vegas", country: "USA"),
+                date: Date().addingTimeInterval(86400 * 45)
             )
         ]
     }
-}
-
-// MARK: - Models
-
-struct Prediction: Identifiable {
-    let id: String
-    let eventId: String
-    let matchTitle: String
-    let prediction: String
-    let confidence: Int
-    let reasoning: String
-    let timestamp: Date
-    let isLocked: Bool
-}
-
-struct WrestlingEvent: Identifiable {
-    let id: String
-    let name: String
-    let date: Date
-    let promotion: String
-    let venue: String
 }
 
 // MARK: - Supporting Views
@@ -136,34 +125,18 @@ struct EmptyPredictionsView: View {
     let onCreatePrediction: () -> Void
     
     var body: some View {
-        VStack(spacing: 20) {
-            Image(systemName: "crystal.ball")
-                .font(.system(size: 60))
-                .foregroundColor(.accentColor)
-            
-            Text("No Predictions Yet")
-                .font(.title2)
-                .fontWeight(.semibold)
-            
-            Text("Start making predictions about upcoming matches and prove your wrestling knowledge!")
-                .font(.body)
-                .foregroundColor(.secondary)
-                .multilineTextAlignment(.center)
-                .padding(.horizontal)
-            
-            Button("Make Your First Prediction") {
-                onCreatePrediction()
-            }
-            .buttonStyle(.borderedProminent)
-            .controlSize(.large)
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Color(.systemGroupedBackground))
+        EmptyStateView(
+            icon: "crystal.ball",
+            title: "No Predictions Yet",
+            description: "Start making predictions about upcoming matches and prove your wrestling knowledge!",
+            buttonTitle: "Make Your First Prediction",
+            action: onCreatePrediction
+        )
     }
 }
 
 struct EventCard: View {
-    let event: WrestlingEvent
+    let event: Event
     let isSelected: Bool
     let action: () -> Void
     
@@ -211,7 +184,7 @@ struct PredictionCardView: View {
                 Spacer()
                 
                 VStack(alignment: .trailing, spacing: 4) {
-                    ConfidenceIndicator(confidence: prediction.confidence)
+                    ConfidenceIndicator(confidence: prediction.confidenceLevel.rawValue)
                     if prediction.isLocked {
                         Image(systemName: "lock.fill")
                             .font(.caption)
@@ -226,13 +199,13 @@ struct PredictionCardView: View {
                 .lineLimit(3)
             
             HStack {
-                Text(prediction.timestamp, style: .relative)
+                Text(prediction.createdAt, style: .relative)
                     .font(.caption)
                     .foregroundColor(.secondary)
                 
                 Spacer()
                 
-                if !prediction.isLocked {
+                if prediction.canEdit {
                     Button("Edit") {
                         // Edit prediction
                     }
@@ -248,28 +221,15 @@ struct PredictionCardView: View {
     }
 }
 
-struct ConfidenceIndicator: View {
-    let confidence: Int
-    
-    var body: some View {
-        HStack(spacing: 2) {
-            ForEach(1...10, id: \.self) { index in
-                Circle()
-                    .fill(index <= confidence ? Color.accentColor : Color(.systemGray4))
-                    .frame(width: 8, height: 8)
-            }
-        }
-    }
-}
 
 struct NewPredictionView: View {
     @Environment(\.dismiss) private var dismiss
     let onSave: (Prediction) -> Void
     
-    @State private var selectedEvent = ""
+    @State private var selectedEventId = ""
     @State private var matchTitle = ""
     @State private var prediction = ""
-    @State private var confidence = 5
+    @State private var confidence = ConfidenceLevel.average
     @State private var reasoning = ""
     
     var body: some View {
@@ -286,16 +246,12 @@ struct NewPredictionView: View {
                 }
                 
                 Section("Confidence Level") {
-                    VStack {
-                        HStack {
-                            Text("Confidence: \(confidence)/10")
-                            Spacer()
+                    Picker("Confidence", selection: $confidence) {
+                        ForEach(ConfidenceLevel.allCases, id: \.self) { level in
+                            Text(level.displayName).tag(level)
                         }
-                        Slider(value: Binding(
-                            get: { Double(confidence) },
-                            set: { confidence = Int($0) }
-                        ), in: 1...10, step: 1)
                     }
+                    .pickerStyle(.menu)
                 }
             }
             .navigationTitle("New Prediction")
@@ -311,13 +267,17 @@ struct NewPredictionView: View {
                     Button("Save") {
                         let newPrediction = Prediction(
                             id: UUID().uuidString,
-                            eventId: "wrestlemania-40",
+                            userId: "user1",
+                            eventId: selectedEventId.isEmpty ? "wrestlemania-40" : selectedEventId,
                             matchTitle: matchTitle,
                             prediction: prediction,
-                            confidence: confidence,
+                            confidenceLevel: confidence,
                             reasoning: reasoning,
-                            timestamp: Date(),
-                            isLocked: false
+                            status: .submitted,
+                            predictionType: .ppvMatch,
+                            deadline: Date().addingTimeInterval(86400 * 7), // 7 days from now
+                            createdAt: Date(),
+                            updatedAt: Date()
                         )
                         onSave(newPrediction)
                         dismiss()

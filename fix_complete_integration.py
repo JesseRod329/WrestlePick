@@ -1,114 +1,124 @@
 #!/usr/bin/env python3
-"""
-Complete Xcode integration fix - adds build file definitions and updates build phase
-"""
 
 import re
 import uuid
 
-def generate_uuid():
-    """Generate a 24-character UUID for Xcode project files"""
-    return ''.join(str(uuid.uuid4()).replace('-', '').upper()[:24])
-
 def fix_complete_integration():
+    """Completely fix the Xcode project integration"""
+    
     project_file = '/Users/jesse/IOS/WrestlePick/WrestlePick.xcodeproj/project.pbxproj'
     
-    print("🔧 Complete Xcode integration fix...")
+    print("🔧 Completely fixing Xcode project integration...")
     
+    # Read project file
     with open(project_file, 'r') as f:
         content = f.read()
     
-    # Files to add to the project
-    files_to_add = [
+    # All Swift files that should be in the project
+    all_files = [
+        'WrestlePickApp.swift',
+        'ContentView.swift',
         'RealDataModels.swift',
-        'RealNewsView.swift', 
+        'RealNewsView.swift',
         'RealRSSManager.swift',
         'SimpleNewsView.swift',
-        'SimpleRSSManager.swift'
+        'SimpleRSSManager.swift',
+        'RealDataPredictionsView.swift',
+        'CreatePredictionView.swift',
+        'RealDataAwardsView.swift',
+        'RealDataProfileView.swift',
+        'FantasyBookingView.swift',
+        'CreateBookingView.swift',
+        'PredictionService.swift',
+        'AwardsService.swift',
+        'UserService.swift',
+        'BookingService.swift',
+        'Award.swift',
+        'PredictionModels.swift',
+        'FantasyBookingModels.swift',
+        'User.swift'
     ]
     
-    # Generate UUIDs for build files
-    build_file_uuids = {}
-    for file_name in files_to_add:
-        build_file_uuids[file_name] = generate_uuid()
-        print(f"  📄 {file_name} -> {build_file_uuids[file_name]}")
+    # Generate UUIDs for all files
+    file_uuids = {}
+    for file_name in all_files:
+        file_uuids[file_name] = str(uuid.uuid4()).replace('-', '').upper()[:24]
     
-    # 1. Add build file definitions
-    print("\n1. Adding build file definitions...")
+    print(f"Processing {len(all_files)} files...")
     
-    build_file_definitions = ""
-    for file_name in files_to_add:
-        # Find the file reference ID for this file
-        file_ref_pattern = rf'(\w+) /\* {re.escape(file_name)} \*/ = {{isa = PBXFileReference;'
-        file_ref_match = re.search(file_ref_pattern, content)
-        if file_ref_match:
-            file_ref_id = file_ref_match.group(1)
-            build_file_definitions += f'''
-\t\t{build_file_uuids[file_name]} /* {file_name} in Sources */ = {{isa = PBXBuildFile; fileRef = {file_ref_id} /* {file_name} */; }};'''
-            print(f"  ✅ Added build file definition for {file_name}")
-        else:
-            print(f"  ❌ Could not find file reference for {file_name}")
+    # 1. Clear and rebuild PBXFileReference section
+    file_ref_pattern = r'/\* Begin PBXFileReference section \*/(.*?)/\* End PBXFileReference section \*/'
+    file_ref_match = re.search(file_ref_pattern, content, re.DOTALL)
     
-    # Find the last build file definition and add after it
-    last_build_file_pattern = r'(.*1A2B3C4D5E6F7890ABCDEF01 /\* WrestlePickApp\.swift in Sources \*/ = \{isa = PBXBuildFile;.*?fileRef = 1A2B3C4D5E6F7890ABCDEF00 /\* WrestlePickApp\.swift \*/; \};)'
-    last_build_file_replacement = r'\1' + build_file_definitions
+    if file_ref_match:
+        new_file_refs = ""
+        for file_name in all_files:
+            file_uuid = file_uuids[file_name]
+            new_file_refs += f'\t\t{file_uuid} /* {file_name} */ = {{isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "{file_name}"; sourceTree = "<group>"; }};\n'
+        
+        new_file_ref_section = f'/* Begin PBXFileReference section */{new_file_refs}/* End PBXFileReference section */'
+        content = content.replace(file_ref_match.group(0), new_file_ref_section)
+        print("  ✅ Rebuilt PBXFileReference section")
     
-    content = re.sub(last_build_file_pattern, last_build_file_replacement, content, flags=re.DOTALL)
+    # 2. Clear and rebuild PBXBuildFile section
+    build_file_pattern = r'/\* Begin PBXBuildFile section \*/(.*?)/\* End PBXBuildFile section \*/'
+    build_file_match = re.search(build_file_pattern, content, re.DOTALL)
     
-    # 2. Update build phase to include new files
-    print("\n2. Updating build phase...")
+    if build_file_match:
+        new_build_files = ""
+        for file_name in all_files:
+            file_uuid = file_uuids[file_name]
+            build_uuid = str(uuid.uuid4()).replace('-', '').upper()[:24]
+            new_build_files += f'\t\t{build_uuid} /* {file_name} in Sources */ = {{isa = PBXBuildFile; fileRef = {file_uuid} /* {file_name} */; }};\n'
+        
+        new_build_file_section = f'/* Begin PBXBuildFile section */{new_build_files}/* End PBXBuildFile section */'
+        content = content.replace(build_file_match.group(0), new_build_file_section)
+        print("  ✅ Rebuilt PBXBuildFile section")
     
-    build_file_refs = ""
-    for file_name in files_to_add:
-        build_file_refs += f"\n\t\t\t\t{build_file_uuids[file_name]} /* {file_name} in Sources */,"
+    # 3. Clear and rebuild Sources build phase
+    sources_pattern = r'/\* Sources \*/ = \{{(.*?)\}};'
+    sources_match = re.search(sources_pattern, content, re.DOTALL)
     
-    # Find the build phase and add the new files
-    build_phase_pattern = r'(.*1A2B3C4D5E6F7890ABCDEFF9 /\* Sources \*/ = \{\s*isa = PBXSourcesBuildPhase;\s*buildActionMask = 2147483647;\s*files = \(\s*1A2B3C4D5E6F7890ABCDEF03 /\* ContentView\.swift in Sources \*/,\s*1A2B3C4D5E6F7890ABCDEF01 /\* WrestlePickApp\.swift in Sources \*/,\s*\);\s*runOnlyForDeploymentPostprocessing = 0;\s*\};\s*/\* End PBXSourcesBuildPhase section \*/)'
+    if sources_match:
+        new_sources = ""
+        for file_name in all_files:
+            file_uuid = file_uuids[file_name]
+            build_uuid = str(uuid.uuid4()).replace('-', '').upper()[:24]
+            new_sources += f'\t\t\t\t{build_uuid} /* {file_name} in Sources */,\n'
+        
+        new_sources_section = f'/* Sources */ = {{{new_sources}}};'
+        content = content.replace(sources_match.group(0), new_sources_section)
+        print("  ✅ Rebuilt Sources build phase")
     
-    build_phase_replacement = r'\1' + build_file_refs + r'\n\t\t\2'
-    content = re.sub(build_phase_pattern, build_phase_replacement, content, flags=re.DOTALL)
+    # 4. Update main group to include all files
+    main_group_pattern = r'/\* WrestlePick \*/ = \{{(.*?)\}};'
+    main_group_match = re.search(main_group_pattern, content, re.DOTALL)
     
-    # 3. Write the updated content
-    print("\n3. Writing updated project file...")
+    if main_group_match:
+        group_content = main_group_match.group(1)
+        
+        # Add all file references
+        for file_name in all_files:
+            file_uuid = file_uuids[file_name]
+            group_content += f'\t\t\t\t{file_uuid} /* {file_name} */,\n'
+        
+        new_main_group_section = f'/* WrestlePick */ = {{{group_content}}};'
+        content = content.replace(main_group_match.group(0), new_main_group_section)
+        print("  ✅ Updated main group")
     
+    # Write updated project file
     with open(project_file, 'w') as f:
         f.write(content)
     
-    print("✅ Successfully completed Xcode integration fix!")
-    print("\n📋 Summary:")
-    for file_name in files_to_add:
-        print(f"  ✅ {file_name} added to build phase")
+    print("✅ Successfully fixed complete Xcode project integration!")
     
-    return True
-
-def verify_integration():
-    """Verify that the files were properly added to build phase"""
-    project_file = '/Users/jesse/IOS/WrestlePick/WrestlePick.xcodeproj/project.pbxproj'
-    
-    print("\n🔍 Verifying build phase integration...")
-    
-    with open(project_file, 'r') as f:
-        content = f.read()
-    
-    files_to_check = [
-        'RealDataModels.swift',
-        'RealNewsView.swift', 
-        'RealRSSManager.swift',
-        'SimpleNewsView.swift',
-        'SimpleRSSManager.swift'
-    ]
-    
-    for file_name in files_to_check:
-        if f"{file_name} in Sources" in content:
-            print(f"  ✅ {file_name} found in build phase")
+    # Verify integration
+    print("\n🔍 Verifying integration...")
+    for file_name in all_files:
+        if file_name in content:
+            print(f"  ✅ {file_name} found in project file")
         else:
-            print(f"  ❌ {file_name} NOT found in build phase")
+            print(f"  ❌ {file_name} NOT found in project file")
 
 if __name__ == "__main__":
-    try:
-        fix_complete_integration()
-        verify_integration()
-        print("\n🎉 Complete Xcode integration fix completed successfully!")
-    except Exception as e:
-        print(f"❌ Error: {e}")
-        exit(1)
+    fix_complete_integration()

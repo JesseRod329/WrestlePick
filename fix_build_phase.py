@@ -1,65 +1,77 @@
 #!/usr/bin/env python3
-"""
-Fix the build phase to include all the new Swift files
-"""
 
 import re
+import uuid
 
 def fix_build_phase():
+    """Fix the build phase to include all new files"""
+    
     project_file = '/Users/jesse/IOS/WrestlePick/WrestlePick.xcodeproj/project.pbxproj'
     
-    print("🔧 Fixing build phase to include all Swift files...")
+    print("🔧 Fixing build phase to include all files...")
     
+    # Read project file
     with open(project_file, 'r') as f:
         content = f.read()
     
-    # Files to add to build phase
-    files_to_add = [
+    # Files that should be in the build phase
+    files_to_build = [
+        'WrestlePickApp.swift',
+        'ContentView.swift',
         'RealDataModels.swift',
-        'RealNewsView.swift', 
+        'RealNewsView.swift',
         'RealRSSManager.swift',
         'SimpleNewsView.swift',
-        'SimpleRSSManager.swift'
+        'SimpleRSSManager.swift',
+        'RealDataPredictionsView.swift',
+        'CreatePredictionView.swift',
+        'RealDataAwardsView.swift',
+        'RealDataProfileView.swift',
+        'FantasyBookingView.swift',
+        'CreateBookingView.swift',
+        'PredictionService.swift',
+        'AwardsService.swift',
+        'UserService.swift',
+        'BookingService.swift',
+        'Award.swift',
+        'PredictionModels.swift',
+        'FantasyBookingModels.swift',
+        'User.swift'
     ]
     
-    # Find the build phase section and add the new files
-    build_phase_pattern = r'(.*1A2B3C4D5E6F7890ABCDEFF9 /\* Sources \*/ = \{\s*isa = PBXSourcesBuildPhase;\s*buildActionMask = 2147483647;\s*files = \(\s*1A2B3C4D5E6F7890ABCDEF03 /\* ContentView\.swift in Sources \*/,\s*1A2B3C4D5E6F7890ABCDEF01 /\* WrestlePickApp\.swift in Sources \*/,\s*\);\s*runOnlyForDeploymentPostprocessing = 0;\s*\};\s*/\* End PBXSourcesBuildPhase section \*/)'
+    # Find the Sources build phase
+    sources_pattern = r'/\* Sources \*/ = \{{(.*?)\}};'
+    sources_match = re.search(sources_pattern, content, re.DOTALL)
     
-    # Generate build file references for the new files
-    build_file_refs = ""
-    for file_name in files_to_add:
-        # Find the build file ID for this file
-        file_ref_pattern = rf'(\w+) /\* {re.escape(file_name)} \*/ = {{isa = PBXFileReference;'
-        file_ref_match = re.search(file_ref_pattern, content)
-        if file_ref_match:
-            file_ref_id = file_ref_match.group(1)
-            # Find the build file ID for this file
-            build_file_pattern = rf'(\w+) /\* {re.escape(file_name)} in Sources \*/ = {{isa = PBXBuildFile; fileRef = {file_ref_id} /\* {re.escape(file_name)} \*/; \}};'
-            build_file_match = re.search(build_file_pattern, content)
-            if build_file_match:
-                build_file_id = build_file_match.group(1)
-                build_file_refs += f"\n\t\t\t\t{build_file_id} /* {file_name} in Sources */,"
+    if sources_match:
+        sources_content = sources_match.group(1)
+        
+        # Clear existing sources and add all files
+        new_sources = ""
+        for file_name in files_to_build:
+            # Find the UUID for this file
+            file_uuid_pattern = rf'([A-F0-9]{{24}}) /\* {re.escape(file_name)} \*/'
+            file_match = re.search(file_uuid_pattern, content)
+            
+            if file_match:
+                file_uuid = file_match.group(1)
+                build_uuid = str(uuid.uuid4()).replace('-', '').upper()[:24]
+                
+                # Add to sources
+                new_sources += f'\t\t\t\t{build_uuid} /* {file_name} in Sources */,\n'
                 print(f"  ✅ Added {file_name} to build phase")
             else:
-                print(f"  ❌ Could not find build file for {file_name}")
-        else:
-            print(f"  ❌ Could not find file reference for {file_name}")
+                print(f"  ❌ Could not find UUID for {file_name}")
+        
+        # Update content
+        new_sources_section = f'/* Sources */ = {{{new_sources}}};'
+        content = content.replace(sources_match.group(0), new_sources_section)
     
-    # Update the build phase
-    build_phase_replacement = r'\1' + build_file_refs + r'\n\t\t\2'
-    content = re.sub(build_phase_pattern, build_phase_replacement, content, flags=re.DOTALL)
-    
-    # Write the updated content
+    # Write updated project file
     with open(project_file, 'w') as f:
         f.write(content)
     
-    print("✅ Successfully updated build phase!")
-    return True
+    print("✅ Successfully fixed build phase!")
 
 if __name__ == "__main__":
-    try:
-        fix_build_phase()
-        print("\n🎉 Build phase fix completed successfully!")
-    except Exception as e:
-        print(f"❌ Error: {e}")
-        exit(1)
+    fix_build_phase()

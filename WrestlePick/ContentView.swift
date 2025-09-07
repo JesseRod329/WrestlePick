@@ -3,33 +3,40 @@ import SwiftUI
 struct ContentView: View {
     var body: some View {
         TabView {
-            SimpleNewsView()
+            RealDataNewsView()
                 .tabItem {
                     Image(systemName: "newspaper")
                     Text("News")
                 }
             
-            Text("Predictions Tab")
+            RealDataPredictionsView()
                 .tabItem {
                     Image(systemName: "crystal.ball")
                     Text("Predictions")
                 }
             
-            Text("Awards Tab")
+            RealDataAwardsView()
                 .tabItem {
                     Image(systemName: "trophy")
                     Text("Awards")
                 }
             
-            Text("Profile Tab")
+            RealDataProfileView()
                 .tabItem {
                     Image(systemName: "person.circle")
                     Text("Profile")
                 }
+            
+            FantasyBookingView()
+                .tabItem {
+                    Image(systemName: "book")
+                    Text("Booking")
+                }
         }
-        .accentColor(.accentColor)
+        .accentColor(.blue)
     }
 }
+
 
 #Preview {
     ContentView()

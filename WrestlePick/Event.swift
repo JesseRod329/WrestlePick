@@ -1,8 +1,9 @@
 import Foundation
-import FirebaseFirestore
+// import FirebaseFirestore
 
 struct Event: Identifiable, Codable {
-    @DocumentID var id: String?
+    // @DocumentID var id: String?
+    let id: String?
     let name: String
     let description: String
     let type: EventType
